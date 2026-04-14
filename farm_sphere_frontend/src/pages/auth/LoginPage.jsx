@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLoginMutation } from '@/store/api/authApi';
-import { setCredentials } from '@/store/slices/authSlice';
+import { setCredentials, selectIsAuthenticated, selectRoles } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,10 +20,28 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const roles = useSelector(selectRoles);
   const [showPassword, setShowPassword] = useState(false);
+  
   const from = location.state?.from?.pathname || '/marketplace';
 
   const [login, { isLoading }] = useLoginMutation();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const isAdmin = roles?.includes('ADMIN');
+      // If user is Admin, go to Admin dashboard unless specifically trying to access another admin page
+      if (isAdmin) {
+        const fromPath = location.state?.from?.pathname || '';
+        const target = fromPath.startsWith('/admin') ? fromPath : '/admin/dashboard';
+        navigate(target, { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    }
+  }, [isAuthenticated, roles, navigate, from, location.state?.from?.pathname]);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
@@ -36,16 +54,7 @@ export function LoginPage() {
       const payload = response.data || response;
       dispatch(setCredentials(payload));
       
-      const isAdmin = payload.roles?.includes('ADMIN');
-      
-      // If user is Admin, go straight to Admin dashboard unless specifically trying to access another admin page
-      if (isAdmin) {
-        const fromPath = location.state?.from?.pathname || '';
-        const target = fromPath.startsWith('/admin') ? fromPath : '/admin/dashboard';
-        navigate(target, { replace: true });
-      } else {
-        navigate(from, { replace: true });
-      }
+      // The useEffect will handle redirection once the store updates and isAuthenticated/roles change
     } catch (err) {
       // Toast handled by middleware
     }

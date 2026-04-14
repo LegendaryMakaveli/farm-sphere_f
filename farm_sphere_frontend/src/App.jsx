@@ -63,8 +63,8 @@ export default function App() {
 
           {/* Main app routes - all protected */}
           <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-            {/* Default redirect to marketplace */}
-            <Route index element={<Navigate to="/marketplace" replace />} />
+            {/* Default redirect to login page */}
+            <Route index element={<Navigate to="/login" replace />} />
 
             {/* Marketplace (all authenticated users) */}
             <Route path="/marketplace" element={<MarketplacePage />} />
@@ -103,8 +103,8 @@ export default function App() {
             <Route path="/admin/investments" element={<InvestmentManagementPage />} />
           </Route>
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/marketplace" replace />} />
+          {/* Catch-all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>
