@@ -16,14 +16,21 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { token, email, userId, firstName, secondName, phoneNumber, address, gender, age, roles, lastLogin, profileStatus } = action.payload;
-      state.token = token;
-      state.user = { email, userId, firstName, secondName, phoneNumber, address, gender, age, lastLogin, profileStatus, roles: roles ? [...roles] : [] };
-      state.roles = roles ? [...roles] : [];
-      state.profileStatus = profileStatus;
+      const payload = action.payload;
+      state.token = payload.token || state.token;
+      
+      // Merge user data to prevent losing fields (address, gender, age) missing in lean responses
+      state.user = { 
+        ...state.user, 
+        ...payload,
+        roles: payload.roles ? [...payload.roles] : (state.user?.roles || [])
+      };
+      
+      state.roles = state.user.roles;
+      state.profileStatus = state.user.profileStatus;
       state.isAuthenticated = true;
 
-      localStorage.setItem('farmsphere_token', token);
+      localStorage.setItem('farmsphere_token', state.token);
       localStorage.setItem('farmsphere_user', JSON.stringify(state.user));
     },
 

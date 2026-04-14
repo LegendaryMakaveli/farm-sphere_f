@@ -1,55 +1,24 @@
 import { useState } from 'react';
-import { useGetMyProduceQuery, useListProduceMutation, useDeleteProduceMutation } from '@/store/api/marketplaceApi';
+import { useGetMyProduceQuery, useDeleteProduceMutation } from '@/store/api/marketplaceApi';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Leaf, Trash2, Package } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-
-const listSchema = z.object({
-  cropName: z.string().min(1, 'Required'),
-  category: z.string().min(1, 'Required'),
-  quantityAvailable: z.coerce.number().positive(),
-  unit: z.string().min(1, 'Required'),
-  pricePerUnit: z.coerce.number().positive(),
-  harvestDate: z.string().min(1, 'Required'),
-  expiryDate: z.string().min(1, 'Required'),
-  description: z.string().optional(),
-});
+import { ListProduceDialog } from '@/components/farmer/ListProduceDialog';
 
 export function MyProducePage() {
   const { data: response, isLoading } = useGetMyProduceQuery();
-  const [listProduce, { isLoading: listing }] = useListProduceMutation();
   const [deleteProduce] = useDeleteProduceMutation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const produce = response?.data || [];
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm({
-    resolver: zodResolver(listSchema),
-  });
-
-  const onSubmit = async (data) => {
-    try {
-      await listProduce(data).unwrap();
-      setDialogOpen(false);
-      reset();
-    } catch (err) {}
-  };
-
   const handleDelete = async (produceId) => {
     if (window.confirm('Remove this listing?')) {
-      await deleteProduce(produceId);
+      await deleteProduce(produceId).unwrap();
     }
   };
 
@@ -80,7 +49,7 @@ export function MyProducePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={p.status} />
-                    <Button variant="ghost" size="icon-sm" className="text-red-500" onClick={() => handleDelete(p.produceId)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => handleDelete(p.produceId)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
@@ -94,37 +63,8 @@ export function MyProducePage() {
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>List New Produce</DialogTitle></DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-            <div className="space-y-1"><Label>Crop Name</Label><Input {...register('cropName')} placeholder="e.g. Tomatoes" />{errors.cropName && <p className="text-xs text-destructive">{errors.cropName.message}</p>}</div>
-            <div className="space-y-1">
-              <Label>Category</Label>
-              <Select onValueChange={(v) => setValue('category', v)} value={watch('category')}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {['GRAINS', 'VEGETABLES', 'FRUITS', 'LEGUMES', 'TUBERS', 'CASH_CROPS'].map(c => <SelectItem key={c} value={c}>{c.replace(/_/g, ' ')}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1"><Label>Quantity</Label><Input type="number" step="0.1" {...register('quantityAvailable')} /></div>
-              <div className="space-y-1"><Label>Unit</Label><Input {...register('unit')} placeholder="kg" /></div>
-            </div>
-            <div className="space-y-1"><Label>Price per Unit (₦)</Label><Input type="number" step="0.01" {...register('pricePerUnit')} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1"><Label>Harvest Date</Label><Input type="date" {...register('harvestDate')} /></div>
-              <div className="space-y-1"><Label>Expiry Date</Label><Input type="date" {...register('expiryDate')} /></div>
-            </div>
-            <div className="space-y-1"><Label>Description</Label><Textarea {...register('description')} rows={2} /></div>
-            <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={listing}>{listing ? 'Listing...' : 'List Produce'}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ListProduceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>
   );
 }
+

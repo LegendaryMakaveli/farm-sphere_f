@@ -14,7 +14,7 @@ import {
   TrendingUp, Wallet, BarChart3, Settings, ChevronLeft,
   X, Leaf, ShieldCheck, UserPlus, Briefcase,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const USER_NAV = [
   { label: 'Marketplace', icon: Store, path: '/marketplace' },
@@ -61,7 +61,7 @@ export function Sidebar() {
   const [farmerExpired, setFarmerExpired] = useState(false);
   const [investorExpired, setInvestorExpired] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkExpiration = (status, type, setExpired) => {
       const key = `${type}_reject_${user?.userId}`;
       if (status !== 'REJECTED') {
@@ -77,7 +77,7 @@ export function Sidebar() {
       }
       
       const elapsed = Date.now() - parseInt(rejectedAt, 10);
-      setExpired(elapsed > 48 * 60 * 60 * 1000); // 48 hours
+      setExpired(elapsed > 24 * 60 * 60 * 1000); // 24 hours
     };
 
     checkExpiration(liveStatus?.farmerStatus, 'farmer', setFarmerExpired);
@@ -184,10 +184,15 @@ export function Sidebar() {
                 <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Application pending</span>
               </div>
             ) : liveStatus?.farmerStatus === 'REJECTED' && !farmerExpired ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                <X className="h-4 w-4 text-red-600" />
-                <span className="text-xs font-medium text-red-700 dark:text-red-400">Application rejected</span>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="w-full justify-start gap-2 border-forest-200 dark:border-forest-800 text-forest-700 dark:text-forest-300 opacity-60"
+              >
+                <Sprout className="h-4 w-4" />
+                Rejected (Wait 24h)
+              </Button>
             ) : (
               <Button
                 variant="outline"
@@ -223,10 +228,15 @@ export function Sidebar() {
                 <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Application pending</span>
               </div>
             ) : liveStatus?.investorStatus === 'REJECTED' && !investorExpired ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                <X className="h-4 w-4 text-red-600" />
-                <span className="text-xs font-medium text-red-700 dark:text-red-400">Application rejected</span>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="w-full justify-start gap-2 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 opacity-60"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Rejected (Wait 24h)
+              </Button>
             ) : (
               <Button
                 variant="outline"
