@@ -37,7 +37,7 @@ export function FarmCycleManagementPage() {
                 <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><RotateCcw className="h-5 w-5 text-emerald-600" /></div>
                 <div>
                   <p className="font-medium">Cycle #{c.farmCycleId}</p>
-                  <p className="text-xs text-muted-foreground">Plot #{c.plotId} • Plan #{c.cropPlanId} • Started {formatDate(c.startDate)}</p>
+                  <p className="text-xs text-muted-foreground">Plot #{c.plotId} • Plan #{c.cropPlanId} • {new Date(c.startDate) > new Date() ? 'Starting on' : 'Started'} {formatDate(c.startDate)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -51,10 +51,11 @@ export function FarmCycleManagementPage() {
 
       <Dialog open={startDialog} onOpenChange={setStartDialog}>
         <DialogContent><DialogHeader><DialogTitle>Start Farm Cycle</DialogTitle></DialogHeader>
-          <form onSubmit={startForm.handleSubmit(async d => { await startFarmCycle(d); setStartDialog(false); startForm.reset(); })} className="space-y-3">
-            <div className="space-y-1"><Label>Plot ID</Label><Input type="number" {...startForm.register('plotId', { valueAsNumber: true })} /></div>
-            <div className="space-y-1"><Label>Crop Plan ID</Label><Input type="number" {...startForm.register('cropPlanId', { valueAsNumber: true })} /></div>
-            <div className="space-y-1"><Label>Start Date</Label><Input type="date" {...startForm.register('startDate')} /></div>
+          <form onSubmit={startForm.handleSubmit(async d => { const payload = { plotId: d.plotId, farmerId: d.farmerId, farmerEmail: d.farmerEmail, startDate: d.startDate ? d.startDate + 'T00:00:00' : null }; await startFarmCycle(payload); setStartDialog(false); startForm.reset(); })} className="space-y-3">
+            <div className="space-y-1"><Label>Plot ID</Label><Input type="number" {...startForm.register('plotId', { valueAsNumber: true, required: 'Plot ID is required' })} /></div>
+            <div className="space-y-1"><Label>Farmer ID</Label><Input type="number" {...startForm.register('farmerId', { valueAsNumber: true, required: 'Farmer ID is required' })} /></div>
+            <div className="space-y-1"><Label>Farmer Email</Label><Input type="email" {...startForm.register('farmerEmail', { required: 'Farmer email is required' })} /></div>
+            <div className="space-y-1"><Label>Start Date</Label><Input type="date" {...startForm.register('startDate', { required: 'Start date is required' })} /></div>
             <DialogFooter><Button variant="outline" type="button" onClick={() => setStartDialog(false)}>Cancel</Button><Button type="submit" disabled={starting}>{starting ? 'Starting...' : 'Start Cycle'}</Button></DialogFooter>
           </form>
         </DialogContent>

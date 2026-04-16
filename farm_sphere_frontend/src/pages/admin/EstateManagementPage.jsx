@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetAllEstatesQuery, useCreateEstateMutation, useGetClustersByEstateQuery, useCreateClusterMutation, useGetAllPlotsQuery, useCreatePlotMutation, useAssignPlotMutation, useUnassignPlotMutation } from '@/store/api/adminApi';
+import { useGetAllEstatesQuery, useCreateEstateMutation, useGetClustersByEstateQuery, useCreateClusterMutation, useGetAllPlotsQuery, useCreatePlotMutation, useAssignPlotMutation, useUnassignPlotMutation, useGetAllFarmersQuery } from '@/store/api/adminApi';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -22,9 +22,15 @@ export function EstateManagementPage() {
   const [createPlot, { isLoading: cp }] = useCreatePlotMutation();
   const [assignPlot] = useAssignPlotMutation();
   const [unassignPlot] = useUnassignPlotMutation();
+  const { data: farmersRes } = useGetAllFarmersQuery();
+  const [selectedEstateId, setSelectedEstateId] = useState(null);
+  const { data: clustersRes, isLoading: lc } = useGetClustersByEstateQuery(selectedEstateId, { skip: !selectedEstateId });
+
 
   const estates = estatesRes?.data || [];
   const plots = plotsRes?.data || [];
+  const clusters = clustersRes?.data || [];
+  const farmers = farmersRes?.data || [];
 
   const [estateDialog, setEstateDialog] = useState(false);
   const [clusterDialog, setClusterDialog] = useState(false);
@@ -43,6 +49,7 @@ export function EstateManagementPage() {
       <Tabs defaultValue="estates" className="space-y-4">
         <TabsList>
           <TabsTrigger value="estates"><MapPin className="h-3.5 w-3.5 mr-1" /> Estates</TabsTrigger>
+          <TabsTrigger value="clusters"><Layers className="h-3.5 w-3.5 mr-1" /> Clusters</TabsTrigger>
           <TabsTrigger value="plots"><Map className="h-3.5 w-3.5 mr-1" /> Plots</TabsTrigger>
         </TabsList>
 
@@ -54,7 +61,7 @@ export function EstateManagementPage() {
           {le ? <Skeleton className="h-40 w-full" /> : estates.length === 0 ? <EmptyState icon={MapPin} title="No estates" /> :
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {estates.map(e => (
-                <Card key={e.id}><CardContent className="p-5">
+                <Card key={e.estateId || e.id}><CardContent className="p-5">
                   <h3 className="font-semibold text-lg mb-1">{e.name}</h3>
                   <p className="text-sm text-muted-foreground mb-2">{e.description}</p>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -65,6 +72,51 @@ export function EstateManagementPage() {
               ))}
             </div>}
         </TabsContent>
+
+        <TabsContent value="clusters">
+          <div className="space-y-4">
+            <div className="bg-muted/30 p-4 rounded-lg flex items-center gap-4">
+              <Label className="whitespace-nowrap font-medium">Estate View:</Label>
+              <Select onValueChange={id => setSelectedEstateId(id)}>
+                <SelectTrigger className="w-[250px] bg-background"><SelectValue placeholder="Select an estate" /></SelectTrigger>
+                <SelectContent>
+                  {estates.map(e => <SelectItem key={e.estateId || e.id} value={(e.estateId || e.id).toString()}>{e.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {!selectedEstateId ? (
+              <EmptyState icon={Layers} title="Select an estate" description="Choose an estate to manage its clusters" />
+            ) : lc ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Skeleton className="h-32" /><Skeleton className="h-32" />
+              </div>
+            ) : clusters.length === 0 ? (
+              <EmptyState icon={Layers} title="No clusters found" description="There are no clusters registered for this estate" />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {clusters.map(c => (
+                  <Card key={c.clusterId || c.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="p-5 pb-2"><CardTitle className="text-lg">{c.clusterName}</CardTitle></CardHeader>
+                    <CardContent className="p-5 pt-0">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Farming Model:</span>
+                          <span className="font-medium">{c.farmingModel.replace(/_/g, ' ')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Primary Crop:</span>
+                          <span className="font-medium text-emerald-600">{c.primaryCropName}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
 
         <TabsContent value="plots">
           <div className="flex justify-end mb-4">
@@ -109,6 +161,7 @@ export function EstateManagementPage() {
             <div className="space-y-1"><Label>Estate ID</Label><Input type="number" {...clusterForm.register('estateId', { valueAsNumber: true })} /></div>
             <div className="space-y-1"><Label>Cluster Name</Label><Input {...clusterForm.register('clusterName')} /></div>
             <div className="space-y-1"><Label>Primary Crop ID</Label><Input type="number" {...clusterForm.register('primaryCropId', { valueAsNumber: true })} /></div>
+            <div className="space-y-1"><Label>Primary Crop Name</Label><Input {...clusterForm.register('primaryCropName')} /></div>
             <div className="space-y-1"><Label>Farming Model</Label>
               <Select onValueChange={v => clusterForm.setValue('farmingModel', v)}>
                 <SelectTrigger><SelectValue placeholder="Select model" /></SelectTrigger>
@@ -140,9 +193,41 @@ export function EstateManagementPage() {
       {/* Assign Plot Dialog */}
       <Dialog open={assignDialog.open} onOpenChange={(o) => setAssignDialog(prev => ({ ...prev, open: o }))}>
         <DialogContent><DialogHeader><DialogTitle>Assign Plot #{assignDialog.plotId}</DialogTitle></DialogHeader>
-          <form onSubmit={assignForm.handleSubmit(async d => { await assignPlot({ plotId: assignDialog.plotId, ...d }); setAssignDialog({ open: false, plotId: null }); assignForm.reset(); })} className="space-y-3">
-            <div className="space-y-1"><Label>Farmer ID</Label><Input type="number" {...assignForm.register('farmerId', { valueAsNumber: true })} /></div>
-            <DialogFooter><Button variant="outline" type="button" onClick={() => setAssignDialog({ open: false, plotId: null })}>Cancel</Button><Button type="submit">Assign</Button></DialogFooter>
+          <form onSubmit={assignForm.handleSubmit(async d => { await assignPlot({ plotId: assignDialog.plotId, ...d }); setAssignDialog({ open: false, plotId: null }); assignForm.reset(); })} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Select Farmer</Label>
+              <Select onValueChange={id => {
+                const farmer = farmers.find(f => f.id.toString() === id);
+                if (farmer) {
+                  assignForm.setValue('farmerId', farmer.id);
+                  assignForm.setValue('farmerName', `${farmer.firstName} ${farmer.secondName}`);
+                  assignForm.setValue('farmerEmail', farmer.email);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a farmer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {farmers.map(f => (
+                    <SelectItem key={f.id} value={f.id.toString()}>
+                      {f.firstName} {f.secondName} ({f.farmName})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {assignForm.watch('farmerEmail') && (
+              <div className="bg-muted/50 p-3 rounded text-sm space-y-1 animate-in fade-in">
+                <p><span className="text-muted-foreground">Email:</span> {assignForm.watch('farmerEmail')}</p>
+                <p><span className="text-muted-foreground">Farm:</span> {farmers.find(f => f.id === assignForm.watch('farmerId'))?.farmName}</p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" type="button" onClick={() => setAssignDialog({ open: false, plotId: null })}>Cancel</Button>
+              <Button type="submit" disabled={!assignForm.watch('farmerId')}>Assign Plot</Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

@@ -39,6 +39,11 @@ export const farmingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Tasks'],
     }),
+
+    getAllCrops: builder.query({
+      query: () => '/admin/farming/get-all/crops',
+      providesTags: ['Crops'],
+    }),
   }),
 });
 
@@ -49,4 +54,5 @@ export const {
   useGetMyTasksQuery,
   useGetMyPendingTasksQuery,
   useUpdateTaskStatusMutation,
+  useGetAllCropsQuery,
 } = farmingApi;

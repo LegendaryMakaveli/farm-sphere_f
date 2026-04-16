@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGetMyPlotQuery } from '@/store/api/estateApi';
-import { useGetCropPlanByPlotQuery, useAddIntercropMutation } from '@/store/api/farmingApi';
+import { useGetCropPlanByPlotQuery, useAddIntercropMutation, useGetAllCropsQuery } from '@/store/api/farmingApi';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -10,20 +10,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageSkeleton } from '@/components/shared/LoadingSkeleton';
 import { Sprout, Plus, Leaf } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 
 export function CropPlanPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { data: plotRes } = useGetMyPlotQuery();
   const plotId = plotRes?.data?.plotId;
   const { data: response, isLoading } = useGetCropPlanByPlotQuery(plotId, { skip: !plotId });
+  const { data: cropsRes } = useGetAllCropsQuery();
+  const crops = cropsRes?.data || [];
+
   const [addIntercrop, { isLoading: adding }] = useAddIntercropMutation();
-  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const { register, handleSubmit, reset, control, setValue } = useForm();
 
   const cropPlan = response?.data;
-
-  const { register, handleSubmit, reset } = useForm();
 
   const onAddIntercrop = async (data) => {
     try {
@@ -86,9 +90,85 @@ export function CropPlanPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Add Intercrop</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit(onAddIntercrop)} className="space-y-4">
-            <div className="space-y-2"><Label>Crop ID</Label><Input type="number" {...register('cropId', { valueAsNumber: true })} placeholder="Enter crop ID" /></div>
-            <div className="space-y-2"><Label>Expected Yield (kg)</Label><Input type="number" step="0.1" {...register('expectedYield', { valueAsNumber: true })} placeholder="Expected yield" /></div>
-            <div className="space-y-2"><Label>Spacing Pattern</Label><Input {...register('spacingPattern')} placeholder="e.g., 1m x 0.5m" /></div>
+            <div className="space-y-2">
+              <Label>Plot ID</Label>
+              <Input readOnly value={plotId || ''} className="bg-muted cursor-not-allowed" />
+              <input type="hidden" {...register('plotId')} value={plotId || ''} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Search Intercrop Crop</Label>
+              <Controller
+                name="intercropCropId"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select onValueChange={(val) => field.onChange(Number(val))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a crop" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {crops.map(c => (
+                        <SelectItem key={c.cropId} value={c.cropId.toString()}>
+                          {c.cropName} ({c.category?.toLowerCase()})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Expected Yield</Label>
+                <Input type="number" step="0.1" {...register('expectedYield', { valueAsNumber: true, required: true })} placeholder="0.0" />
+              </div>
+              <div className="space-y-2">
+                <Label>Unit</Label>
+                <Controller
+                  name="yieldUnit"
+                  control={control}
+                  defaultValue="KG_PER_HECTARE"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="KG_PER_HECTARE">KG/Ha</SelectItem>
+                        <SelectItem value="TON_PER_HECTARE">Ton/Ha</SelectItem>
+                        <SelectItem value="BAG_PER_ACRE">Bag/Acre</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Spacing Pattern</Label>
+              <Controller
+                name="spacingPattern"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose spacing" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1m x 1m">1m x 1m (Standard)</SelectItem>
+                      <SelectItem value="2m x 1m">2m x 1m (Wide)</SelectItem>
+                      <SelectItem value="2.5m x 0.5m">2.5m x 0.5m (Dense)</SelectItem>
+                      <SelectItem value="3m x 0.5m">3m x 0.5m (Intercrop Mix)</SelectItem>
+                      <SelectItem value="Square (1.5m)">Square (1.5m)</SelectItem>
+                      <SelectItem value="Double Row">Double Row</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
             <DialogFooter>
               <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={adding}>{adding ? 'Adding...' : 'Add Intercrop'}</Button>

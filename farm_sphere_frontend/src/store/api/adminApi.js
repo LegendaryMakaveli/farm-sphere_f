@@ -11,6 +11,10 @@ export const adminApi = baseApi.injectEndpoints({
       query: () => '/admin/investors/pending',
       providesTags: ['PendingInvestors'],
     }),
+    getAllFarmers: builder.query({
+      query: () => '/admin/farmers/all',
+      providesTags: ['Farmers'],
+    }),
     approveFarmer: builder.mutation({
       query: (farmerId) => ({ url: `/admin/farmers/${farmerId}/approve`, method: 'PATCH' }),
       invalidatesTags: ['PendingFarmers'],
@@ -85,6 +89,10 @@ export const adminApi = baseApi.injectEndpoints({
     createCropPlan: builder.mutation({
       query: (data) => ({ url: '/admin/farming/create/crop-plans', method: 'POST', body: data }),
       invalidatesTags: ['CropPlans'],
+    }),
+    getAllCropPlans: builder.query({
+      query: () => '/admin/farming/get-all/crop-plans',
+      providesTags: ['CropPlans'],
     }),
     getAdminCropPlanById: builder.query({
       query: (cropPlanId) => `/admin/farming/get/crop-plan/${cropPlanId}`,
@@ -226,7 +234,7 @@ export const adminApi = baseApi.injectEndpoints({
 
 export const {
   // Auth Admin
-  useGetPendingFarmersQuery, useGetPendingInvestorsQuery,
+  useGetPendingFarmersQuery, useGetPendingInvestorsQuery, useGetAllFarmersQuery,
   useApproveFarmerMutation, useRejectFarmerMutation,
   useApproveInvestorMutation, useRejectInvestorMutation,
   // Estate Admin
@@ -237,6 +245,7 @@ export const {
   // Farming Admin
   useCreateCropMutation, useGetAllCropsQuery, useGetAdminCropByIdQuery,
   useGetCropsByCategoryQuery, useCreateCropPlanMutation,
+  useGetAllCropPlansQuery,
   useGetAdminCropPlanByIdQuery, useGetAdminCropPlanByPlotQuery,
   useStartFarmCycleMutation, useGetAllFarmCyclesQuery,
   useGetActiveCycleByPlotQuery, useActivateFarmCycleMutation,

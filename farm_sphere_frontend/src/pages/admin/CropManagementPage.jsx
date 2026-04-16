@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetAllCropsQuery, useCreateCropMutation, useCreateCropPlanMutation } from '@/store/api/adminApi';
+import { useGetAllCropsQuery, useCreateCropMutation, useCreateCropPlanMutation, useGetAllCropPlansQuery } from '@/store/api/adminApi';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,16 +10,19 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Leaf, Sprout } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Leaf, Sprout, ClipboardList, MapPin } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 export function CropManagementPage() {
-  const { data: res, isLoading } = useGetAllCropsQuery();
+  const { data: cropsRes, isLoading: loadingCrops } = useGetAllCropsQuery();
+  const { data: plansRes, isLoading: loadingPlans } = useGetAllCropPlansQuery();
   const [createCrop, { isLoading: creating }] = useCreateCropMutation();
   const [createCropPlan, { isLoading: creatingPlan }] = useCreateCropPlanMutation();
   const [cropDialog, setCropDialog] = useState(false);
   const [planDialog, setPlanDialog] = useState(false);
-  const crops = res?.data || [];
+  const crops = cropsRes?.data || [];
+  const plans = plansRes?.data || [];
 
   const cropForm = useForm();
   const planForm = useForm();
@@ -33,22 +36,67 @@ export function CropManagementPage() {
         </div>}
       />
 
-      {isLoading ? <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}</div> :
-       crops.length === 0 ? <EmptyState icon={Leaf} title="No crops" description="Add your first crop to get started" /> :
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {crops.map(crop => (
-            <Card key={crop.cropId} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-forest-100 dark:bg-forest-900/30 flex items-center justify-center flex-shrink-0"><Leaf className="h-5 w-5 text-forest-600" /></div>
-                <div>
-                  <p className="font-semibold">{crop.cropName}</p>
-                  <Badge variant="secondary" className="mt-1">{crop.category?.replace(/_/g, ' ')}</Badge>
-                  <p className="text-xs text-muted-foreground mt-1">{crop.growthDurationDays} days</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>}
+      <Tabs defaultValue="crops" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="crops"><Leaf className="h-3.5 w-3.5 mr-1" /> Crops</TabsTrigger>
+          <TabsTrigger value="plans"><ClipboardList className="h-3.5 w-3.5 mr-1" /> Crop Plans</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="crops">
+          {loadingCrops ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}</div> :
+           crops.length === 0 ? <EmptyState icon={Leaf} title="No crops" description="Add your first crop to get started" /> :
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {crops.map(crop => (
+                <Card key={crop.cropId} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-forest-100 dark:bg-forest-900/30 flex items-center justify-center flex-shrink-0"><Leaf className="h-5 w-5 text-forest-600" /></div>
+                    <div>
+                      <p className="font-semibold">{crop.cropName}</p>
+                      <Badge variant="secondary" className="mt-1">{crop.category?.replace(/_/g, ' ')}</Badge>
+                      <p className="text-xs text-muted-foreground mt-1">{crop.growthDurationDays} days</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>}
+        </TabsContent>
+
+        <TabsContent value="plans">
+          {loadingPlans ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}</div> :
+           plans.length === 0 ? <EmptyState icon={ClipboardList} title="No crop plans" description="Create a plan from a plot to get started" /> :
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {plans.map(plan => {
+                const primaryItem = plan.items?.find(i => i.role === 'PRIMARY') || plan.items?.[0];
+                return (
+                <Card key={plan.cropPlanId} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center"><ClipboardList className="h-4 w-4 text-indigo-600" /></div>
+                        <div>
+                          <p className="font-semibold">Plan #{plan.cropPlanId}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" /> Plot #{plan.plotId}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline">{plan.intercroppingEnabled ? 'INTERCROP' : 'SINGLE'}</Badge>
+                    </div>
+                    <div className="bg-muted/30 p-2 rounded-lg space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Crop:</span>
+                        <span className="font-medium text-emerald-600">{primaryItem?.cropName || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Expected Yield:</span>
+                        <span className="font-medium">{primaryItem?.expectedYield || '—'} {primaryItem?.yieldUnit?.replace(/_/g, ' ') || ''}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                );
+              })}
+            </div>}
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={cropDialog} onOpenChange={setCropDialog}>
         <DialogContent><DialogHeader><DialogTitle>Create Crop</DialogTitle></DialogHeader>
@@ -72,7 +120,41 @@ export function CropManagementPage() {
           <form onSubmit={planForm.handleSubmit(async d => { await createCropPlan(d); setPlanDialog(false); planForm.reset(); })} className="space-y-3">
             <div className="space-y-1"><Label>Plot ID</Label><Input type="number" {...planForm.register('plotId', { valueAsNumber: true })} /></div>
             <div className="space-y-1"><Label>Primary Crop ID</Label><Input type="number" {...planForm.register('primaryCropId', { valueAsNumber: true })} /></div>
-            <div className="space-y-1"><Label>Expected Yield (kg)</Label><Input type="number" step="0.1" {...planForm.register('expectedYield', { valueAsNumber: true })} /></div>
+            <div className="space-y-1">
+              <Label>Expected Yield</Label>
+              <Input 
+                type="number" 
+                step="0.1" 
+                {...planForm.register('expectedYield', { 
+                  required: 'Expected yield is required',
+                  min: { value: 0.1, message: 'Expected yield must be greater than 0' },
+                  valueAsNumber: true 
+                })} 
+              />
+              {planForm.formState.errors.expectedYield && (
+                <p className="text-xs text-destructive">{planForm.formState.errors.expectedYield.message}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Yield Unit</Label>
+              <Select onValueChange={v => {
+                planForm.setValue('yieldUnit', v);
+                planForm.trigger('yieldUnit');
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                  <input type="hidden" {...planForm.register('yieldUnit', { required: 'Yield unit is required' })} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="KG_PER_HECTARE">KG Per Hectare</SelectItem>
+                  <SelectItem value="TON_PER_HECTARE">TON Per Hectare</SelectItem>
+                  <SelectItem value="BAG_PER_ACRE">BAG Per Acre</SelectItem>
+                </SelectContent>
+              </Select>
+              {planForm.formState.errors.yieldUnit && (
+                <p className="text-xs text-destructive">{planForm.formState.errors.yieldUnit.message}</p>
+              )}
+            </div>
             <DialogFooter><Button variant="outline" type="button" onClick={() => setPlanDialog(false)}>Cancel</Button><Button type="submit" disabled={creatingPlan}>{creatingPlan ? 'Creating...' : 'Create Plan'}</Button></DialogFooter>
           </form>
         </DialogContent>

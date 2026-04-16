@@ -51,12 +51,13 @@ export function TaskManagementPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent><DialogHeader><DialogTitle>Create Task</DialogTitle></DialogHeader>
-          <form onSubmit={taskForm.handleSubmit(async d => { await createTask(d); setDialogOpen(false); taskForm.reset(); })} className="space-y-3">
+          <form onSubmit={taskForm.handleSubmit(async d => { const payload = { ...d, dueDate: d.dueDate ? d.dueDate + 'T00:00:00' : null }; await createTask(payload); setDialogOpen(false); taskForm.reset(); })} className="space-y-3">
             <div className="space-y-1"><Label>Farm Cycle ID</Label><Input type="number" {...taskForm.register('farmCycleId', { valueAsNumber: true })} /></div>
             <div className="space-y-1"><Label>Title</Label><Input {...taskForm.register('title')} /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea {...taskForm.register('description')} rows={2} /></div>
             <div className="space-y-1"><Label>Due Date</Label><Input type="date" {...taskForm.register('dueDate')} /></div>
             <div className="space-y-1"><Label>Assigned Farmer ID</Label><Input type="number" {...taskForm.register('assignedFarmerId', { valueAsNumber: true })} /></div>
+            <div className="space-y-1"><Label>Assigned Farmer Email</Label><Input type="email" {...taskForm.register('assignedFarmerEmail', { required: 'Farmer email is required' })} /></div>
             <DialogFooter><Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button><Button type="submit" disabled={creating}>{creating ? 'Creating...' : 'Create Task'}</Button></DialogFooter>
           </form>
         </DialogContent>

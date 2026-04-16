@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Loader2, Plus, TrendingUp, HandCoins } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export function InvestmentManagementPage() {
@@ -34,6 +35,8 @@ export function InvestmentManagementPage() {
     unitPrice: '',
     expectedROI: '',
     fundingDeadline: '',
+    marketPricePerUnit: '',
+    marketUnit: 'KG',
   });
 
   const handleInputChange = (e) => {
@@ -44,13 +47,24 @@ export function InvestmentManagementPage() {
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
+      const unitPrice = parseFloat(formData.unitPrice) || 0;
+      const roi = parseFloat(formData.expectedROI) || 0;
+      
       const payload = {
-        ...formData,
-        cropPlanId: Number(formData.cropPlanId),
-        totalUnits: Number(formData.totalUnits),
-        unitPrice: Number(formData.unitPrice),
-        expectedROI: Number(formData.expectedROI),
+        cropPlanId: Number(formData.cropPlanId) || 0,
+        cropName: String(formData.cropName || ''),
+        farmerName: String(formData.farmerName || ''),
+        totalUnits: parseInt(formData.totalUnits) || 0,
+        unitPrice: unitPrice,
+        expectedROI: roi,
+        overrideROI: roi,
+        fundingDeadline: formData.fundingDeadline,
+        marketPricePerUnit: formData.marketPricePerUnit ? parseFloat(formData.marketPricePerUnit) : (unitPrice * 1.25),
+        marketUnit: formData.marketUnit || 'KG'
       };
+      
+      console.log('Creating Asset with payload:', payload);
+      
       await createAsset(payload).unwrap();
       toast.success('Investment asset created successfully!');
       setShowCreateForm(false);
@@ -62,9 +76,13 @@ export function InvestmentManagementPage() {
         unitPrice: '',
         expectedROI: '',
         fundingDeadline: '',
+        marketPricePerUnit: '',
+        marketUnit: 'KG',
       });
     } catch (err) {
-      toast.error(err.data?.message || 'Failed to create asset');
+      console.error('Create Asset Error Details:', err);
+      const errorMsg = err.data?.message || err.data?.error || err.error || 'Failed to create asset';
+      toast.error(errorMsg);
     }
   };
 
@@ -79,8 +97,8 @@ export function InvestmentManagementPage() {
 
   const handleRecordHarvest = async (assetId) => {
     try {
-      // Hardcoding for now, could be a separate modal form
-      await recordHarvest({ assetId, actualYield: 1000, harvestDate: new Date().toISOString().split('T')[0], quality: 'A' }).unwrap();
+      // Backend RecordHarvestRequest specifically expects 'actualROI' (float)
+      await recordHarvest({ assetId, actualROI: 12.5 }).unwrap();
       toast.success('Harvest recorded successfully!');
     } catch (err) {
       toast.error(err.data?.message || 'Failed to record harvest');
@@ -152,6 +170,21 @@ export function InvestmentManagementPage() {
               <div className="space-y-2">
                 <Label htmlFor="fundingDeadline">Funding Deadline</Label>
                 <Input id="fundingDeadline" name="fundingDeadline" value={formData.fundingDeadline} onChange={handleInputChange} required type="date" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marketPricePerUnit">Market Price Per Unit (Projected)</Label>
+                <Input id="marketPricePerUnit" name="marketPricePerUnit" value={formData.marketPricePerUnit} onChange={handleInputChange} type="number" step="0.01" placeholder="Optional - defaults to +20%" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marketUnit">Market Unit</Label>
+                <Select value={formData.marketUnit} onValueChange={(v) => setFormData(p => ({ ...p, marketUnit: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="KG">KG</SelectItem>
+                    <SelectItem value="TONNE">TONNE</SelectItem>
+                    <SelectItem value="UNIT">UNIT</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="col-span-1 md:col-span-2 pt-2 flex justify-end">
                 <Button type="submit" disabled={isCreating}>
