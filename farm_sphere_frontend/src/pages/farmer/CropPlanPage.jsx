@@ -28,6 +28,8 @@ export function CropPlanPage() {
   const { register, handleSubmit, reset, control, setValue } = useForm();
 
   const cropPlan = response?.data;
+  const primaryCropId = cropPlan?.items?.find(item => item.role === 'PRIMARY')?.cropId;
+  const filteredCrops = crops.filter(c => c.cropId !== primaryCropId);
 
   const onAddIntercrop = async (data) => {
     try {
@@ -93,11 +95,10 @@ export function CropPlanPage() {
             <div className="space-y-2">
               <Label>Plot ID</Label>
               <Input readOnly value={plotId || ''} className="bg-muted cursor-not-allowed" />
-              <input type="hidden" {...register('plotId')} value={plotId || ''} />
             </div>
 
             <div className="space-y-2">
-              <Label>Search Intercrop Crop</Label>
+              <Label>Select Intercrop</Label>
               <Controller
                 name="intercropCropId"
                 control={control}
@@ -108,7 +109,7 @@ export function CropPlanPage() {
                       <SelectValue placeholder="Select a crop" />
                     </SelectTrigger>
                     <SelectContent>
-                      {crops.map(c => (
+                      {filteredCrops.map(c => (
                         <SelectItem key={c.cropId} value={c.cropId.toString()}>
                           {c.cropName} ({c.category?.toLowerCase()})
                         </SelectItem>

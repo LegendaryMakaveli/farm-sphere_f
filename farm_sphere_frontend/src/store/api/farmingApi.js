@@ -11,7 +11,7 @@ export const farmingApi = baseApi.injectEndpoints({
       query: ({ plotId, ...data }) => ({
         url: `/farmers/farming/add/plot/${plotId}/intercrop`,
         method: 'POST',
-        body: data,
+        body: { ...data, plotId },
       }),
       invalidatesTags: ['CropPlan'],
     }),

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetAllEstatesQuery, useCreateEstateMutation, useGetClustersByEstateQuery, useCreateClusterMutation, useGetAllPlotsQuery, useCreatePlotMutation, useAssignPlotMutation, useUnassignPlotMutation, useGetAllFarmersQuery } from '@/store/api/adminApi';
+import { useGetAllEstatesQuery, useCreateEstateMutation, useGetClustersByEstateQuery, useCreateClusterMutation, useGetAllPlotsQuery, useCreatePlotMutation, useAssignPlotMutation, useUnassignPlotMutation, useGetAllFarmersQuery, useEnableIntercroppingMutation, useGetAllCropPlansQuery } from '@/store/api/adminApi';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, MapPin, Layers, Map } from 'lucide-react';
+import { Plus, MapPin, Layers, Map, ToggleRight, CheckCircle2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 export function EstateManagementPage() {
@@ -22,6 +22,8 @@ export function EstateManagementPage() {
   const [createPlot, { isLoading: cp }] = useCreatePlotMutation();
   const [assignPlot] = useAssignPlotMutation();
   const [unassignPlot] = useUnassignPlotMutation();
+  const [enableIntercrop, { isLoading: enabling }] = useEnableIntercroppingMutation();
+  const { data: plansRes } = useGetAllCropPlansQuery();
   const { data: farmersRes } = useGetAllFarmersQuery();
   const [selectedEstateId, setSelectedEstateId] = useState(null);
   const { data: clustersRes, isLoading: lc } = useGetClustersByEstateQuery(selectedEstateId, { skip: !selectedEstateId });
@@ -31,6 +33,13 @@ export function EstateManagementPage() {
   const plots = plotsRes?.data || [];
   const clusters = clustersRes?.data || [];
   const farmers = farmersRes?.data || [];
+  const cropPlans = plansRes?.data || [];
+
+  // Map plotId to intercropping status
+  const intercropStatusMap = cropPlans.reduce((acc, plan) => {
+    acc[plan.plotId] = plan.intercroppingEnabled;
+    return acc;
+  }, {});
 
   const [estateDialog, setEstateDialog] = useState(false);
   const [clusterDialog, setClusterDialog] = useState(false);
@@ -131,9 +140,35 @@ export function EstateManagementPage() {
                     <p className="text-muted-foreground">Size: {p.plotSize} ha • Soil: {p.soilType}</p>
                     {p.farmerEmail && <p className="text-muted-foreground">Farmer: {p.farmerEmail}</p>}
                   </div>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {p.status === 'AVAILABLE' && <Button size="sm" variant="outline" onClick={() => setAssignDialog({ open: true, plotId: p.plotId })}>Assign</Button>}
-                    {p.status === 'ASSIGNED' && <Button size="sm" variant="destructive" onClick={() => unassignPlot(p.plotId)}>Unassign</Button>}
+                    {p.status === 'ASSIGNED' && (
+                      <>
+                        <Button size="sm" variant="destructive" onClick={() => unassignPlot(p.plotId)}>Unassign</Button>
+                        <Button 
+                          size="sm" 
+                          variant={intercropStatusMap[p.plotId] ? "ghost" : "soft"} 
+                          className={intercropStatusMap[p.plotId] 
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50 cursor-default opacity-80" 
+                            : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                          }
+                          onClick={() => !intercropStatusMap[p.plotId] && enableIntercrop(p.plotId)}
+                          disabled={enabling || intercropStatusMap[p.plotId]}
+                        >
+                          {intercropStatusMap[p.plotId] ? (
+                            <>
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Intercrop Enabled
+                            </>
+                          ) : (
+                            <>
+                              <ToggleRight className="h-3 w-3 mr-1" />
+                              {enabling ? '...' : 'Enable Intercrop'}
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </CardContent></Card>
               ))}

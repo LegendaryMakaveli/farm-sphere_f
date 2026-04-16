@@ -59,15 +59,6 @@ function SidebarContent({ location, navigate, dispatch, onNavClick }) {
 
       <div className="px-3 pb-3 space-y-2">
         <Separator />
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2"
-          onClick={() => { navigate('/marketplace'); onNavClick?.(); }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to App
-        </Button>
       </div>
     </>
   );

@@ -102,6 +102,10 @@ export const adminApi = baseApi.injectEndpoints({
       query: (plotId) => `/admin/farming/get/crop-plans/plot/${plotId}`,
       providesTags: ['CropPlans'],
     }),
+    enableIntercropping: builder.mutation({
+      query: (plotId) => ({ url: `/admin/farming/plots/${plotId}/enable-intercropping`, method: 'PATCH' }),
+      invalidatesTags: ['CropPlans'],
+    }),
     startFarmCycle: builder.mutation({
       query: (data) => ({ url: '/admin/farming/start/farm-cycles', method: 'POST', body: data }),
       invalidatesTags: ['AllFarmCycles'],
@@ -249,6 +253,7 @@ export const {
   useGetAdminCropPlanByIdQuery, useGetAdminCropPlanByPlotQuery,
   useStartFarmCycleMutation, useGetAllFarmCyclesQuery,
   useGetActiveCycleByPlotQuery, useActivateFarmCycleMutation,
+  useEnableIntercroppingMutation,
   useRecordHarvestMutation, useCreateTaskMutation, useGetTasksByFarmCycleQuery,
   // Order Admin
   useGetAllOrdersQuery, useGetPendingOrdersQuery, useGetMatchedOrdersQuery,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetAllCropsQuery, useCreateCropMutation, useCreateCropPlanMutation, useGetAllCropPlansQuery } from '@/store/api/adminApi';
+import { useGetAllCropsQuery, useCreateCropMutation, useCreateCropPlanMutation, useGetAllCropPlansQuery, useEnableIntercroppingMutation } from '@/store/api/adminApi';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Leaf, Sprout, ClipboardList, MapPin } from 'lucide-react';
+import { Plus, Leaf, Sprout, ClipboardList, MapPin, ToggleRight, CheckCircle2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 export function CropManagementPage() {
@@ -19,6 +19,7 @@ export function CropManagementPage() {
   const { data: plansRes, isLoading: loadingPlans } = useGetAllCropPlansQuery();
   const [createCrop, { isLoading: creating }] = useCreateCropMutation();
   const [createCropPlan, { isLoading: creatingPlan }] = useCreateCropPlanMutation();
+  const [enableIntercropping, { isLoading: enabling }] = useEnableIntercroppingMutation();
   const [cropDialog, setCropDialog] = useState(false);
   const [planDialog, setPlanDialog] = useState(false);
   const crops = cropsRes?.data || [];
@@ -90,6 +91,29 @@ export function CropManagementPage() {
                         <span className="font-medium">{primaryItem?.expectedYield || '—'} {primaryItem?.yieldUnit?.replace(/_/g, ' ') || ''}</span>
                       </div>
                     </div>
+
+                    <Button 
+                      variant={plan.intercroppingEnabled ? "ghost" : "soft"} 
+                      size="sm" 
+                      className={plan.intercroppingEnabled 
+                        ? "w-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50 cursor-default opacity-80" 
+                        : "w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300"
+                      }
+                      onClick={() => !plan.intercroppingEnabled && enableIntercropping(plan.plotId)}
+                      disabled={enabling || plan.intercroppingEnabled}
+                    >
+                      {plan.intercroppingEnabled ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Intercrop Enabled
+                        </>
+                      ) : (
+                        <>
+                          <ToggleRight className="h-4 w-4 mr-2" />
+                          {enabling ? 'Enabling...' : 'Enable Intercropping'}
+                        </>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
                 );
