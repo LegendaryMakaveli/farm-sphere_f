@@ -51,7 +51,11 @@ export function RegisterPage() {
   const onSubmit = async (data) => {
     const { confirmPassword, ...payload } = data;
     try {
-      const response = await registerUser(payload).unwrap();
+      const payloadWithDate = {
+        ...payload,
+        dateCreated: new Date().toISOString().split('T')[0]
+      };
+      const response = await registerUser(payloadWithDate).unwrap();
       const authPayload = response.data || response;
       
       // Automatically log the user in after registration

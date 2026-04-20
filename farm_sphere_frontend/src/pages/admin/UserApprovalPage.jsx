@@ -46,6 +46,7 @@ export function UserApprovalPage() {
             <p className="font-medium">{user.firstName} {user.secondName || user.lastName}</p>
             <p className="text-xs text-muted-foreground">{user.email}</p>
             {user.experienceLevel && <Badge variant="secondary" className="mt-1 text-2xs">{user.experienceLevel}</Badge>}
+            <p className="text-[10px] text-muted-foreground mt-1">Joined: {user.dateCreated ? new Date(user.dateCreated).toLocaleDateString() : 'New'}</p>
           </div>
         </div>
         <div className="flex gap-2">

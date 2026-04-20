@@ -30,7 +30,10 @@ export function ListProduceDialog({ open, onOpenChange }) {
 
   const onSubmit = async (data) => {
     try {
-      await listProduce(data).unwrap();
+      await listProduce({
+        ...data,
+        dateCreated: new Date().toISOString().split('T')[0]
+      }).unwrap();
       onOpenChange(false);
       reset();
     } catch (err) {}

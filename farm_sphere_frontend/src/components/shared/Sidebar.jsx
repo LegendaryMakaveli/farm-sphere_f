@@ -90,14 +90,19 @@ export function Sidebar() {
   const handleUpgradeFarmer = async () => {
     if (!experienceLevel) return;
     try {
-      await upgradeToFarmer({ experienceLevel }).unwrap();
+      await upgradeToFarmer({ 
+        experienceLevel,
+        dateCreated: new Date().toISOString().split('T')[0]
+      }).unwrap();
       setFarmerDialogOpen(false);
     } catch (err) { /* toast handled by middleware */ }
   };
 
   const handleUpgradeInvestor = async () => {
     try {
-      await upgradeToInvestor().unwrap();
+      await upgradeToInvestor({
+        dateCreated: new Date().toISOString().split('T')[0]
+      }).unwrap();
       setInvestorDialogOpen(false);
     } catch (err) { /* toast handled by middleware */ }
   };

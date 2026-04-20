@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { getInitials } from '@/lib/utils';
-import { User, Mail, Phone, MapPin, Moon, Sun, Shield } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Moon, Sun, Shield, Calendar } from 'lucide-react';
 
 export function SettingsPage() {
   const dispatch = useDispatch();
@@ -46,6 +46,7 @@ export function SettingsPage() {
                 { icon: Mail, label: 'Email', value: user?.email },
                 { icon: Phone, label: 'Phone', value: user?.phoneNumber || '—' },
                 { icon: MapPin, label: 'Address', value: user?.address || '—' },
+                { icon: Calendar, label: 'Member Since', value: user?.dateCreated ? new Date(user.dateCreated).toLocaleDateString() : '—' },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-3 py-2 border-b last:border-0">
                   <item.icon className="h-4 w-4 text-muted-foreground" />
