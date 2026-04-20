@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "${VITE_API_URL}"
+      "destination": "https://farmspherebackend.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
