@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://farmspherebackend.onrender.com';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const baseApi = createApi({
   reducerPath: 'api',
@@ -43,6 +43,7 @@ export const baseApi = createApi({
     'AllOrders',
     'AllTools',
     'AllBookings',
+    'Users',
   ],
   endpoints: () => ({}),
 });

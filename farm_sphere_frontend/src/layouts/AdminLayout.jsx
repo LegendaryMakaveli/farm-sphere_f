@@ -8,14 +8,15 @@ import { Separator } from '@/components/ui/separator';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Users, MapPin, Sprout, RotateCcw,
+  LayoutDashboard, Users, UserCheck, MapPin, Sprout, RotateCcw,
   ListTodo, ShoppingCart, Wrench, TrendingUp, ArrowLeft,
   Sun, Moon, LogOut, Leaf, Menu, X,
 } from 'lucide-react';
 
 const ADMIN_NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
-  { label: 'User Approvals', icon: Users, path: '/admin/approvals' },
+  { label: 'User Directory', icon: Users, path: '/admin/users' },
+  { label: 'User Approvals', icon: UserCheck, path: '/admin/approvals' },
   { label: 'Estate Management', icon: MapPin, path: '/admin/estates' },
   { label: 'Crop Management', icon: Sprout, path: '/admin/crops' },
   { label: 'Farm Cycles', icon: RotateCcw, path: '/admin/farm-cycles' },

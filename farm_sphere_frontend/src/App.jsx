@@ -39,6 +39,7 @@ import { SecondaryMarketPage } from '@/pages/investor/SecondaryMarketPage';
 // Admin Pages
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { UserApprovalPage } from '@/pages/admin/UserApprovalPage';
+import { UserDirectoryPage } from '@/pages/admin/UserDirectoryPage';
 import { EstateManagementPage } from '@/pages/admin/EstateManagementPage';
 import { CropManagementPage } from '@/pages/admin/CropManagementPage';
 import { FarmCycleManagementPage } from '@/pages/admin/FarmCycleManagementPage';
@@ -93,6 +94,7 @@ export default function App() {
           {/* Admin routes */}
           <Route element={<ProtectedRoute requiredRole="ADMIN"><AdminLayout /></ProtectedRoute>}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserDirectoryPage />} />
             <Route path="/admin/approvals" element={<UserApprovalPage />} />
             <Route path="/admin/estates" element={<EstateManagementPage />} />
             <Route path="/admin/crops" element={<CropManagementPage />} />

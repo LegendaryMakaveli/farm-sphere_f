@@ -15,6 +15,10 @@ export const adminApi = baseApi.injectEndpoints({
       query: () => '/admin/farmers/all',
       providesTags: ['Farmers'],
     }),
+    getAllUsers: builder.query({
+      query: () => '/admin/users/all',
+      providesTags: ['Users'],
+    }),
     approveFarmer: builder.mutation({
       query: (farmerId) => ({ url: `/admin/farmers/${farmerId}/approve`, method: 'PATCH' }),
       invalidatesTags: ['PendingFarmers'],
@@ -241,6 +245,7 @@ export const {
   useGetPendingFarmersQuery, useGetPendingInvestorsQuery, useGetAllFarmersQuery,
   useApproveFarmerMutation, useRejectFarmerMutation,
   useApproveInvestorMutation, useRejectInvestorMutation,
+  useGetAllUsersQuery,
   // Estate Admin
   useCreateEstateMutation, useGetAllEstatesQuery,
   useCreateClusterMutation, useGetClustersByEstateQuery,
