@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Wrench, Calendar, CheckCircle2, XCircle, Package, ArrowLeft } from 'lucide-react';
@@ -68,7 +68,7 @@ export function ToolManagementPage() {
               <Card key={b.bookingId}><CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <p className="font-medium">{b.toolName || `Tool #${b.toolId}`} — Booking #{b.bookingId}</p>
-                  <p className="text-xs text-muted-foreground">Farmer: {b.farmerEmail} • Qty: {b.quantity}</p>
+                  <p className="text-xs text-muted-foreground">Farmer: {b.farmerEmail} • Qty: {b.quantityRequested}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={b.status} />
@@ -85,7 +85,11 @@ export function ToolManagementPage() {
       </Tabs>
 
       <Dialog open={toolDialog} onOpenChange={setToolDialog}>
-        <DialogContent><DialogHeader><DialogTitle>Create Tool</DialogTitle></DialogHeader>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Tool</DialogTitle>
+            <DialogDescription>Add a new tool to the inventory.</DialogDescription>
+          </DialogHeader>
           <form onSubmit={toolForm.handleSubmit(async d => { await createTool(d); setToolDialog(false); toolForm.reset(); })} className="space-y-3">
             <div className="space-y-1"><Label>Tool Name</Label><Input {...toolForm.register('toolName')} /></div>
             <div className="space-y-1"><Label>Description</Label><Input {...toolForm.register('description')} /></div>
@@ -97,16 +101,24 @@ export function ToolManagementPage() {
       </Dialog>
 
       <Dialog open={stockDialog.open} onOpenChange={o => setStockDialog(p => ({ ...p, open: o }))}>
-        <DialogContent><DialogHeader><DialogTitle>Add Stock</DialogTitle></DialogHeader>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Stock</DialogTitle>
+            <DialogDescription>Increase the available quantity of this tool.</DialogDescription>
+          </DialogHeader>
           <form onSubmit={stockForm.handleSubmit(async d => { await addStock({ toolId: stockDialog.toolId, ...d }); setStockDialog({ open: false, toolId: null }); stockForm.reset(); })} className="space-y-3">
-            <div className="space-y-1"><Label>Additional Quantity</Label><Input type="number" {...stockForm.register('quantity', { valueAsNumber: true })} /></div>
+            <div className="space-y-1"><Label>Additional Quantity</Label><Input type="number" {...stockForm.register('quantityToAdd', { valueAsNumber: true })} /></div>
             <DialogFooter><Button variant="outline" type="button" onClick={() => setStockDialog({ open: false, toolId: null })}>Cancel</Button><Button type="submit">Add</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={rejectDialog.open} onOpenChange={o => setRejectDialog(p => ({ ...p, open: o }))}>
-        <DialogContent><DialogHeader><DialogTitle>Reject Booking</DialogTitle></DialogHeader>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Booking</DialogTitle>
+            <DialogDescription>Please provide a reason for rejecting this booking request.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3"><Input value={reason} onChange={e => setReason(e.target.value)} placeholder="Reason" /></div>
           <DialogFooter><Button variant="outline" onClick={() => setRejectDialog({ open: false, bookingId: null })}>Cancel</Button><Button variant="destructive" onClick={() => { rejectBooking({ bookingId: rejectDialog.bookingId, reason }); setRejectDialog({ open: false, bookingId: null }); setReason(''); }}>Reject</Button></DialogFooter>
         </DialogContent>

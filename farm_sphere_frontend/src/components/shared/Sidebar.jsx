@@ -282,7 +282,7 @@ export function Sidebar() {
                 <SelectContent>
                   <SelectItem value="BEGINNER">Beginner</SelectItem>
                   <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
-                  <SelectItem value="EXPERIENCED">Experienced</SelectItem>
+                  <SelectItem value="EXPERT">Experienced</SelectItem>
                 </SelectContent>
               </Select>
             </div>

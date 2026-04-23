@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
 import { Plus, RotateCcw, Play, CheckCircle2 } from 'lucide-react';
@@ -50,7 +50,11 @@ export function FarmCycleManagementPage() {
         </div>}
 
       <Dialog open={startDialog} onOpenChange={setStartDialog}>
-        <DialogContent><DialogHeader><DialogTitle>Start Farm Cycle</DialogTitle></DialogHeader>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start Farm Cycle</DialogTitle>
+            <DialogDescription>Initialize a new farming cycle for a specific plot and farmer.</DialogDescription>
+          </DialogHeader>
           <form onSubmit={startForm.handleSubmit(async d => { const payload = { plotId: d.plotId, farmerId: d.farmerId, farmerEmail: d.farmerEmail, startDate: d.startDate ? d.startDate + 'T00:00:00' : null }; await startFarmCycle(payload); setStartDialog(false); startForm.reset(); })} className="space-y-3">
             <div className="space-y-1"><Label>Plot ID</Label><Input type="number" {...startForm.register('plotId', { valueAsNumber: true, required: 'Plot ID is required' })} /></div>
             <div className="space-y-1"><Label>Farmer ID</Label><Input type="number" {...startForm.register('farmerId', { valueAsNumber: true, required: 'Farmer ID is required' })} /></div>
@@ -62,8 +66,23 @@ export function FarmCycleManagementPage() {
       </Dialog>
 
       <Dialog open={harvestDialog.open} onOpenChange={o => setHarvestDialog(p => ({ ...p, open: o }))}>
-        <DialogContent><DialogHeader><DialogTitle>Record Harvest</DialogTitle></DialogHeader>
-          <form onSubmit={harvestForm.handleSubmit(async d => { await recordHarvest({ farmCycleId: harvestDialog.id, ...d }); setHarvestDialog({ open: false, id: null }); harvestForm.reset(); })} className="space-y-3">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Harvest</DialogTitle>
+            <DialogDescription>Enter the final yield results for this farm cycle.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={harvestForm.handleSubmit(async d => { 
+            const cycle = cycles.find(c => c.farmCycleId === harvestDialog.id);
+            const primaryItem = cycle?.items?.find(i => i.role === 'PRIMARY');
+            if (primaryItem) {
+              await recordHarvest({ 
+                farmCycleId: harvestDialog.id, 
+                itemYields: [{ itemId: primaryItem.itemId, actualYield: d.actualYield }] 
+              }); 
+            }
+            setHarvestDialog({ open: false, id: null }); 
+            harvestForm.reset(); 
+          })} className="space-y-3">
             <div className="space-y-1"><Label>Actual Yield (kg)</Label><Input type="number" step="0.1" {...harvestForm.register('actualYield', { valueAsNumber: true })} /></div>
             <DialogFooter><Button variant="outline" type="button" onClick={() => setHarvestDialog({ open: false, id: null })}>Cancel</Button><Button type="submit" disabled={harvesting}>{harvesting ? 'Recording...' : 'Record Harvest'}</Button></DialogFooter>
           </form>

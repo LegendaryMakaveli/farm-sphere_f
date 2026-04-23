@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
@@ -29,7 +29,15 @@ export function ToolsPage() {
 
   const onBook = async (data) => {
     try {
-      await bookTool({ toolId: selectedTool.toolId, ...data }).unwrap();
+      const payload = {
+        toolId: selectedTool.toolId,
+        toolName: selectedTool.toolName,
+        quantityRequested: data.quantity,
+        startDate: data.startDate + "T00:00:00",
+        endDate: data.endDate + "T00:00:00",
+        purpose: data.purpose
+      };
+      await bookTool(payload).unwrap();
       setDialogOpen(false);
       reset();
     } catch (err) {}
@@ -83,7 +91,7 @@ export function ToolsPage() {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="font-medium">{b.toolName || `Tool #${b.toolId}`}</p>
-                      <p className="text-xs text-muted-foreground">Qty: {b.quantity} • {formatDate(b.startDate)} → {formatDate(b.endDate)}</p>
+                      <p className="text-xs text-muted-foreground">Qty: {b.quantityRequested} • {formatDate(b.startDate)} → {formatDate(b.endDate)}</p>
                     </div>
                     <StatusBadge status={b.status} />
                   </CardContent>
@@ -96,7 +104,10 @@ export function ToolsPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Book {selectedTool?.toolName}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Book {selectedTool?.toolName}</DialogTitle>
+            <DialogDescription>Request to rent this tool for a specific period. All bookings are subject to admin approval.</DialogDescription>
+          </DialogHeader>
           <form onSubmit={handleSubmit(onBook)} className="space-y-4">
             <div className="space-y-1"><Label>Quantity</Label><Input type="number" min={1} max={selectedTool?.quantityAvailable} {...register('quantity', { valueAsNumber: true })} defaultValue={1} /></div>
             <div className="space-y-1"><Label>Start Date</Label><Input type="date" {...register('startDate')} /></div>
